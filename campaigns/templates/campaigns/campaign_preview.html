@@ -1,0 +1,125 @@
+{% extends "base.html" %}
+
+{% block title %}Preview — {{ campaign.name }}{% endblock %}
+
+{% block content %}
+
+<div class="d-flex align-items-center gap-2 mb-4">
+  <a href="{% url 'campaigns:list' %}" class="text-muted text-decoration-none">Campaigns</a>
+  <span class="text-muted">/</span>
+  <span>{{ campaign.name }}</span>
+  <span class="text-muted">/</span>
+  <span>Preview</span>
+</div>
+
+<div class="row g-3 mb-4">
+  <div class="col-md-8">
+    <div class="card shadow-sm h-100">
+      <div class="card-body">
+        <h5 class="card-title">{{ campaign.name }}</h5>
+        <dl class="row mb-0 small">
+          <dt class="col-sm-4">Template</dt>
+          <dd class="col-sm-8"><code>{{ campaign.template_name }}</code></dd>
+          <dt class="col-sm-4">Language</dt>
+          <dd class="col-sm-8">{{ campaign.language_code }}</dd>
+          <dt class="col-sm-4">Dry Run</dt>
+          <dd class="col-sm-8">
+            {% if campaign.dry_run %}
+              <span class="badge bg-warning text-dark">Yes — no real messages</span>
+            {% else %}
+              <span class="badge bg-danger">No — live mode</span>
+            {% endif %}
+          </dd>
+        </dl>
+      </div>
+    </div>
+  </div>
+
+  <div class="col-md-4">
+    <div class="card shadow-sm h-100">
+      <div class="card-body">
+        <h6 class="text-muted mb-3">Recipients</h6>
+        <div class="d-flex flex-column gap-2">
+          <div class="d-flex justify-content-between">
+            <span>Total rows</span><strong>{{ counts.total }}</strong>
+          </div>
+          <div class="d-flex justify-content-between text-success">
+            <span>Valid (pending)</span><strong>{{ counts.pending }}</strong>
+          </div>
+          <div class="d-flex justify-content-between text-warning">
+            <span>Invalid</span><strong>{{ counts.invalid }}</strong>
+          </div>
+          <div class="d-flex justify-content-between text-warning">
+            <span>Duplicate</span><strong>{{ counts.duplicate }}</strong>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="d-flex justify-content-between align-items-center mb-3">
+  <h5 class="mb-0">Recipient Preview</h5>
+  <form method="post" action="{% url 'campaigns:send' campaign.id %}">
+    {% csrf_token %}
+    <button
+      type="submit"
+      class="btn btn-success"
+      {% if counts.pending == 0 %}disabled{% endif %}
+    >
+      {% if campaign.dry_run %}🧪 Run Dry Send{% else %}🚀 Send Messages{% endif %}
+      ({{ counts.pending }} valid)
+    </button>
+  </form>
+</div>
+
+{% if counts.pending == 0 and counts.total == 0 %}
+  <div class="alert alert-warning">
+    No recipients found. The Excel file may be empty or not yet parsed.
+  </div>
+{% elif counts.pending == 0 %}
+  <div class="alert alert-danger">
+    No valid recipients to send. All rows are invalid or duplicate.
+  </div>
+{% endif %}
+
+<div class="card shadow-sm">
+  <div class="table-responsive">
+    <table class="table table-sm table-hover mb-0">
+      <thead class="table-light">
+        <tr>
+          <th>#</th>
+          <th>Phone</th>
+          <th>Name</th>
+          <th>Params</th>
+          <th>Status</th>
+          <th>Error</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for recipient in recipients %}
+        <tr {% if recipient.status == "invalid" or recipient.status == "duplicate" %}class="table-warning"{% endif %}>
+          <td class="text-muted small">{{ recipient.row_number }}</td>
+          <td><code>{{ recipient.phone }}</code></td>
+          <td>{{ recipient.name|default:"—" }}</td>
+          <td>
+            {% if recipient.params %}
+              <code class="small">{{ recipient.params }}</code>
+            {% else %}
+              <span class="text-muted">—</span>
+            {% endif %}
+          </td>
+          <td>{% include "campaigns/_status_badge.html" with status=recipient.status %}</td>
+          <td class="text-danger small">{{ recipient.error_message|default:"" }}</td>
+        </tr>
+        {% empty %}
+        <tr>
+          <td colspan="6" class="text-center text-muted py-4">No recipients imported yet.</td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
+
+{% endblock %}

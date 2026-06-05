@@ -54,3 +54,12 @@ feat: integrate whatsapp cloud api client
 fix: handle duplicate phone numbers
 chore: add environment example file
 ```
+
+## Branch Workflow Rule
+
+After completing each feature/step, always:
+1. Commit all changes on the current branch.
+2. Push the branch to remote (`git push -u origin <branch>`).
+3. Checkout a new branch for the next feature before starting any new work.
+
+Never start a new feature on the same branch as the previous one.

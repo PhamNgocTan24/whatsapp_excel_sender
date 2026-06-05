@@ -1,0 +1,60 @@
+{% extends "base.html" %}
+
+{% block title %}Campaigns — WA Excel Sender{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+  <h2 class="mb-0">Campaigns</h2>
+  <a href="{% url 'campaigns:create' %}" class="btn btn-success">+ New Campaign</a>
+</div>
+
+{% if campaigns %}
+  <div class="card shadow-sm">
+    <div class="table-responsive">
+      <table class="table table-hover mb-0">
+        <thead class="table-light">
+          <tr>
+            <th>Name</th>
+            <th>Template</th>
+            <th>Status</th>
+            <th>Dry Run</th>
+            <th>Created</th>
+            <th></th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for campaign in campaigns %}
+          <tr>
+            <td>
+              <a href="{% url 'campaigns:detail' campaign.id %}" class="fw-semibold text-decoration-none">
+                {{ campaign.name }}
+              </a>
+            </td>
+            <td><code>{{ campaign.template_name }}</code></td>
+            <td>
+              {% include "campaigns/_status_badge.html" with status=campaign.status %}
+            </td>
+            <td>
+              {% if campaign.dry_run %}
+                <span class="badge bg-warning text-dark">Dry Run</span>
+              {% else %}
+                <span class="badge bg-secondary">Live</span>
+              {% endif %}
+            </td>
+            <td class="text-muted small">{{ campaign.created_at|date:"d M Y H:i" }}</td>
+            <td>
+              <a href="{% url 'campaigns:detail' campaign.id %}" class="btn btn-sm btn-outline-secondary">View</a>
+            </td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+{% else %}
+  <div class="text-center py-5 text-muted">
+    <p class="fs-5">No campaigns yet.</p>
+    <a href="{% url 'campaigns:create' %}" class="btn btn-success">Create your first campaign</a>
+  </div>
+{% endif %}
+{% endblock %}

@@ -1,0 +1,27 @@
+{% if status == "pending" %}
+  <span class="badge bg-secondary">Pending</span>
+{% elif status == "invalid" %}
+  <span class="badge bg-warning text-dark">Invalid</span>
+{% elif status == "duplicate" %}
+  <span class="badge bg-warning text-dark">Duplicate</span>
+{% elif status == "sending" %}
+  <span class="badge bg-info text-dark">Sending</span>
+{% elif status == "sent" %}
+  <span class="badge bg-primary">Sent</span>
+{% elif status == "delivered" %}
+  <span class="badge bg-success">Delivered</span>
+{% elif status == "read" %}
+  <span class="badge bg-success">Read</span>
+{% elif status == "failed" %}
+  <span class="badge bg-danger">Failed</span>
+{% elif status == "draft" %}
+  <span class="badge bg-secondary">Draft</span>
+{% elif status == "ready" %}
+  <span class="badge bg-info text-dark">Ready</span>
+{% elif status == "completed" %}
+  <span class="badge bg-success">Completed</span>
+{% elif status == "completed_with_errors" %}
+  <span class="badge bg-warning text-dark">Completed w/ Errors</span>
+{% else %}
+  <span class="badge bg-secondary">{{ status }}</span>
+{% endif %}

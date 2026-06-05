@@ -1,0 +1,88 @@
+{% extends "base.html" %}
+
+{% block title %}New Campaign — WA Excel Sender{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+  <div class="col-md-7">
+
+    <div class="d-flex align-items-center gap-2 mb-4">
+      <a href="{% url 'campaigns:list' %}" class="text-muted text-decoration-none">Campaigns</a>
+      <span class="text-muted">/</span>
+      <span>New Campaign</span>
+    </div>
+
+    <div class="card shadow-sm">
+      <div class="card-body p-4">
+        <h4 class="card-title mb-4">Create Campaign</h4>
+
+        <form method="post" enctype="multipart/form-data" novalidate>
+          {% csrf_token %}
+
+          <div class="mb-3">
+            <label for="{{ form.name.id_for_label }}" class="form-label fw-semibold">
+              Campaign Name <span class="text-danger">*</span>
+            </label>
+            {{ form.name }}
+            {% if form.name.errors %}
+              <div class="text-danger small mt-1">{{ form.name.errors.0 }}</div>
+            {% endif %}
+          </div>
+
+          <div class="mb-3">
+            <label for="{{ form.template_name.id_for_label }}" class="form-label fw-semibold">
+              Template Name <span class="text-danger">*</span>
+            </label>
+            {{ form.template_name }}
+            {% if form.template_name.errors %}
+              <div class="text-danger small mt-1">{{ form.template_name.errors.0 }}</div>
+            {% endif %}
+            <div class="form-text">{{ form.template_name.help_text }}</div>
+          </div>
+
+          <div class="mb-3">
+            <label for="{{ form.language_code.id_for_label }}" class="form-label fw-semibold">
+              Language Code <span class="text-danger">*</span>
+            </label>
+            {{ form.language_code }}
+            {% if form.language_code.errors %}
+              <div class="text-danger small mt-1">{{ form.language_code.errors.0 }}</div>
+            {% endif %}
+            <div class="form-text">{{ form.language_code.help_text }}</div>
+          </div>
+
+          <div class="mb-3">
+            <label for="{{ form.excel_file.id_for_label }}" class="form-label fw-semibold">
+              Excel File (.xlsx) <span class="text-danger">*</span>
+            </label>
+            {{ form.excel_file }}
+            {% if form.excel_file.errors %}
+              <div class="text-danger small mt-1">{{ form.excel_file.errors.0 }}</div>
+            {% endif %}
+            <div class="form-text">{{ form.excel_file.help_text }}</div>
+          </div>
+
+          <div class="mb-4">
+            <div class="form-check">
+              {{ form.dry_run }}
+              <label class="form-check-label" for="{{ form.dry_run.id_for_label }}">
+                {{ form.dry_run.label }}
+              </label>
+            </div>
+            {% if form.dry_run.errors %}
+              <div class="text-danger small mt-1">{{ form.dry_run.errors.0 }}</div>
+            {% endif %}
+          </div>
+
+          <div class="d-flex gap-2">
+            <button type="submit" class="btn btn-success">Upload & Preview</button>
+            <a href="{% url 'campaigns:list' %}" class="btn btn-outline-secondary">Cancel</a>
+          </div>
+
+        </form>
+      </div>
+    </div>
+
+  </div>
+</div>
+{% endblock %}
