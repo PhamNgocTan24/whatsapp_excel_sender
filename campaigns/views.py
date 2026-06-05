@@ -11,6 +11,7 @@ from .selectors import (
     get_status_counts,
 )
 from .services.campaign_importer import import_campaign_recipients
+from .services.campaign_sender import send_campaign
 
 
 @login_required
@@ -82,9 +83,22 @@ def campaign_send(request, campaign_id):
         return redirect("campaigns:detail", campaign_id=campaign_id)
 
     campaign = get_campaign_or_404(campaign_id)
+    result = send_campaign(campaign.id)
 
-    # Sending logic will be wired in Step 5
-    messages.info(request, "Sending not yet implemented.")
+    if result.total == 0:
+        messages.warning(request, "No valid recipients to send.")
+    elif result.failed == 0:
+        messages.success(
+            request,
+            f"{'Dry run' if campaign.dry_run else 'Send'} complete: "
+            f"{result.sent} sent successfully."
+        )
+    else:
+        messages.warning(
+            request,
+            f"Send complete: {result.sent} sent, {result.failed} failed."
+        )
+
     return redirect("campaigns:detail", campaign_id=campaign_id)
 
 
