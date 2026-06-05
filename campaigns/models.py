@@ -90,6 +90,8 @@ class MessageLog(models.Model):
         Campaign,
         on_delete=models.CASCADE,
         related_name="message_logs",
+        null=True,
+        blank=True,
     )
     recipient = models.ForeignKey(
         Recipient,
