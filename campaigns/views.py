@@ -10,6 +10,7 @@ from .selectors import (
     get_campaign_recipients,
     get_status_counts,
 )
+from .services.campaign_importer import import_campaign_recipients
 
 
 @login_required
@@ -27,7 +28,19 @@ def campaign_create(request):
             campaign.created_by = request.user
             campaign.status = CampaignStatus.DRAFT
             campaign.save()
-            messages.success(request, f'Campaign "{campaign.name}" created. Review recipients below.')
+
+            # Parse Excel and create recipients
+            result = import_campaign_recipients(campaign)
+
+            if result.error_message:
+                messages.error(request, f"Import failed: {result.error_message}")
+            else:
+                messages.success(
+                    request,
+                    f'Campaign "{campaign.name}" imported: '
+                    f'{result.valid} valid, {result.invalid} invalid, {result.duplicate} duplicate.'
+                )
+
             return redirect("campaigns:preview", campaign_id=campaign.id)
         else:
             messages.error(request, "Please fix the errors below.")
