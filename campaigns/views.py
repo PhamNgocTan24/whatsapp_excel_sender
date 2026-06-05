@@ -1,5 +1,6 @@
 from django.contrib import messages
 from django.contrib.auth.decorators import login_required
+from django.http import HttpResponse
 from django.shortcuts import redirect, render
 
 from .forms import CampaignCreateForm
@@ -10,6 +11,7 @@ from .selectors import (
     get_campaign_recipients,
     get_status_counts,
 )
+from .services.campaign_exporter import export_campaign_csv
 from .services.campaign_importer import import_campaign_recipients
 from .services.campaign_sender import send_campaign
 
@@ -104,7 +106,10 @@ def campaign_send(request, campaign_id):
 
 @login_required
 def campaign_export(request, campaign_id):
-    # Export logic will be wired in Step 6
     campaign = get_campaign_or_404(campaign_id)
-    messages.info(request, "Export not yet implemented.")
-    return redirect("campaigns:detail", campaign_id=campaign_id)
+    csv_content = export_campaign_csv(campaign)
+
+    filename = f"campaign_{campaign.id}_{campaign.name[:30].replace(' ', '_')}.csv"
+    response = HttpResponse(csv_content, content_type="text/csv; charset=utf-8")
+    response["Content-Disposition"] = f'attachment; filename="{filename}"'
+    return response

@@ -85,6 +85,7 @@
           <th>Status</th>
           <th>Message ID</th>
           <th>Error</th>
+          <th>Sent at</th>
           <th>Updated</th>
         </tr>
       </thead>
@@ -97,6 +98,7 @@
           <td>{% include "campaigns/_status_badge.html" with status=recipient.status %}</td>
           <td class="small text-muted">{{ recipient.whatsapp_message_id|default:"—" }}</td>
           <td class="small text-danger">{{ recipient.error_message|default:"" }}</td>
+          <td class="small text-muted">{{ recipient.sent_at|date:"d M H:i"|default:"—" }}</td>
           <td class="small text-muted">{{ recipient.updated_at|date:"d M H:i" }}</td>
         </tr>
         {% empty %}
