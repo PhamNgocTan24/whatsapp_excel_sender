@@ -24,10 +24,7 @@ class WhatsAppClient:
 
     @property
     def _api_url(self) -> str:
-        return (
-            f"https://graph.facebook.com/{self.api_version}"
-            f"/{self.phone_number_id}/messages"
-        )
+        return f"https://graph.facebook.com/{self.api_version}" f"/{self.phone_number_id}/messages"
 
     @property
     def _headers(self) -> dict:
@@ -111,9 +108,7 @@ class WhatsAppClient:
             payload["template"]["components"] = [
                 {
                     "type": "body",
-                    "parameters": [
-                        {"type": "text", "text": str(p)} for p in body_params
-                    ],
+                    "parameters": [{"type": "text", "text": str(p)} for p in body_params],
                 }
             ]
 

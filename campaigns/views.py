@@ -5,12 +5,7 @@ from django.shortcuts import redirect, render
 
 from .forms import CampaignCreateForm
 from .models import CampaignStatus
-from .selectors import (
-    get_all_campaigns,
-    get_campaign_or_404,
-    get_campaign_recipients,
-    get_status_counts,
-)
+from .selectors import get_all_campaigns, get_campaign_or_404, get_campaign_recipients, get_status_counts
 from .services.campaign_exporter import export_campaign_csv
 from .services.campaign_importer import import_campaign_recipients
 from .services.campaign_sender import send_campaign
@@ -41,7 +36,7 @@ def campaign_create(request):
                 messages.success(
                     request,
                     f'Campaign "{campaign.name}" imported: '
-                    f'{result.valid} valid, {result.invalid} invalid, {result.duplicate} duplicate.'
+                    f"{result.valid} valid, {result.invalid} invalid, {result.duplicate} duplicate.",
                 )
 
             return redirect("campaigns:preview", campaign_id=campaign.id)
@@ -49,6 +44,7 @@ def campaign_create(request):
             messages.error(request, "Please fix the errors below.")
     else:
         from django.conf import settings
+
         initial_dry_run = getattr(settings, "DEFAULT_DRY_RUN", True)
         form = CampaignCreateForm(initial={"dry_run": initial_dry_run, "language_code": "en_US"})
 
@@ -60,11 +56,15 @@ def campaign_preview(request, campaign_id):
     campaign = get_campaign_or_404(campaign_id)
     recipients = get_campaign_recipients(campaign)
     counts = get_status_counts(campaign)
-    return render(request, "campaigns/campaign_preview.html", {
-        "campaign": campaign,
-        "recipients": recipients,
-        "counts": counts,
-    })
+    return render(
+        request,
+        "campaigns/campaign_preview.html",
+        {
+            "campaign": campaign,
+            "recipients": recipients,
+            "counts": counts,
+        },
+    )
 
 
 @login_required
@@ -72,11 +72,15 @@ def campaign_detail(request, campaign_id):
     campaign = get_campaign_or_404(campaign_id)
     recipients = get_campaign_recipients(campaign)
     counts = get_status_counts(campaign)
-    return render(request, "campaigns/campaign_detail.html", {
-        "campaign": campaign,
-        "recipients": recipients,
-        "counts": counts,
-    })
+    return render(
+        request,
+        "campaigns/campaign_detail.html",
+        {
+            "campaign": campaign,
+            "recipients": recipients,
+            "counts": counts,
+        },
+    )
 
 
 @login_required
@@ -92,14 +96,10 @@ def campaign_send(request, campaign_id):
     elif result.failed == 0:
         messages.success(
             request,
-            f"{'Dry run' if campaign.dry_run else 'Send'} complete: "
-            f"{result.sent} sent successfully."
+            f"{'Dry run' if campaign.dry_run else 'Send'} complete: " f"{result.sent} sent successfully.",
         )
     else:
-        messages.warning(
-            request,
-            f"Send complete: {result.sent} sent, {result.failed} failed."
-        )
+        messages.warning(request, f"Send complete: {result.sent} sent, {result.failed} failed.")
 
     return redirect("campaigns:detail", campaign_id=campaign_id)
 

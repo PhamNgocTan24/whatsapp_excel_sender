@@ -8,6 +8,7 @@ from .phone_normalizer import normalize_phone_number
 
 class ExcelParseError(Exception):
     """Raised when the Excel file itself is structurally invalid."""
+
     pass
 
 
@@ -76,19 +77,14 @@ def parse_excel_file(file_path: str) -> list[ParsedRecipientRow]:
 
     if "phone" not in headers:
         raise ExcelParseError(
-            "Missing required column 'phone'. "
-            f"Found columns: {', '.join(h for h in headers if h)}"
+            "Missing required column 'phone'. " f"Found columns: {', '.join(h for h in headers if h)}"
         )
 
     phone_index = headers.index("phone")
     name_index = headers.index("name") if "name" in headers else None
 
     # Columns that are not phone/name become template params
-    param_indices = {
-        i: headers[i]
-        for i in range(len(headers))
-        if i not in (phone_index, name_index) and headers[i]
-    }
+    param_indices = {i: headers[i] for i in range(len(headers)) if i not in (phone_index, name_index) and headers[i]}
 
     parsed_rows: list[ParsedRecipientRow] = []
     seen_phones: set[str] = set()
@@ -117,24 +113,28 @@ def parse_excel_file(file_path: str) -> list[ParsedRecipientRow]:
             errors.append(phone_error)
         elif normalized_phone in seen_phones:
             errors.append(f"Duplicate phone number: {normalized_phone}")
-            parsed_rows.append(ParsedRecipientRow(
-                row_number=row_index,
-                phone=normalized_phone,
-                name=name,
-                params=params,
-                errors=errors,
-            ))
+            parsed_rows.append(
+                ParsedRecipientRow(
+                    row_number=row_index,
+                    phone=normalized_phone,
+                    name=name,
+                    params=params,
+                    errors=errors,
+                )
+            )
             continue
         else:
             seen_phones.add(normalized_phone)
 
-        parsed_rows.append(ParsedRecipientRow(
-            row_number=row_index,
-            phone=normalized_phone if not errors else raw_phone,
-            name=name,
-            params=params,
-            errors=errors,
-        ))
+        parsed_rows.append(
+            ParsedRecipientRow(
+                row_number=row_index,
+                phone=normalized_phone if not errors else raw_phone,
+                name=name,
+                params=params,
+                errors=errors,
+            )
+        )
 
     workbook.close()
     return parsed_rows

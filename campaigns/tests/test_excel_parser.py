@@ -1,4 +1,3 @@
-import io
 import os
 import tempfile
 
@@ -22,12 +21,15 @@ def _make_xlsx(rows: list[list]) -> str:
 
 # --- Valid cases ---
 
+
 def test_valid_file_returns_rows():
-    path = _make_xlsx([
-        ["phone", "name", "order_id"],
-        ["84901234567", "Alice", "ORD001"],
-        ["84987654321", "Bob", "ORD002"],
-    ])
+    path = _make_xlsx(
+        [
+            ["phone", "name", "order_id"],
+            ["84901234567", "Alice", "ORD001"],
+            ["84987654321", "Bob", "ORD002"],
+        ]
+    )
     try:
         rows = parse_excel_file(path)
         assert len(rows) == 2
@@ -40,10 +42,12 @@ def test_valid_file_returns_rows():
 
 
 def test_phone_with_plus_is_normalized():
-    path = _make_xlsx([
-        ["phone", "name"],
-        ["+84901234567", "Alice"],
-    ])
+    path = _make_xlsx(
+        [
+            ["phone", "name"],
+            ["+84901234567", "Alice"],
+        ]
+    )
     try:
         rows = parse_excel_file(path)
         assert rows[0].phone == "84901234567"
@@ -53,10 +57,12 @@ def test_phone_with_plus_is_normalized():
 
 
 def test_phone_with_spaces_is_normalized():
-    path = _make_xlsx([
-        ["phone", "name"],
-        ["84 901 234 567", "Alice"],
-    ])
+    path = _make_xlsx(
+        [
+            ["phone", "name"],
+            ["84 901 234 567", "Alice"],
+        ]
+    )
     try:
         rows = parse_excel_file(path)
         assert rows[0].phone == "84901234567"
@@ -66,13 +72,15 @@ def test_phone_with_spaces_is_normalized():
 
 
 def test_empty_rows_are_skipped():
-    path = _make_xlsx([
-        ["phone", "name"],
-        ["84901234567", "Alice"],
-        [None, None],
-        ["", ""],
-        ["84987654321", "Bob"],
-    ])
+    path = _make_xlsx(
+        [
+            ["phone", "name"],
+            ["84901234567", "Alice"],
+            [None, None],
+            ["", ""],
+            ["84987654321", "Bob"],
+        ]
+    )
     try:
         rows = parse_excel_file(path)
         assert len(rows) == 2
@@ -81,11 +89,13 @@ def test_empty_rows_are_skipped():
 
 
 def test_row_number_matches_excel_row():
-    path = _make_xlsx([
-        ["phone", "name"],
-        ["84901234567", "Alice"],   # Excel row 2
-        ["84987654321", "Bob"],     # Excel row 3
-    ])
+    path = _make_xlsx(
+        [
+            ["phone", "name"],
+            ["84901234567", "Alice"],  # Excel row 2
+            ["84987654321", "Bob"],  # Excel row 3
+        ]
+    )
     try:
         rows = parse_excel_file(path)
         assert rows[0].row_number == 2
@@ -96,10 +106,12 @@ def test_row_number_matches_excel_row():
 
 def test_headers_are_normalized():
     """Headers like 'Phone Number' normalize to 'phone_number', not 'phone' — should raise."""
-    path = _make_xlsx([
-        ["Phone Number", " Appointment Date "],
-        ["84901234567", "2026-06-10"],
-    ])
+    path = _make_xlsx(
+        [
+            ["Phone Number", " Appointment Date "],
+            ["84901234567", "2026-06-10"],
+        ]
+    )
     try:
         with pytest.raises(ExcelParseError, match="phone"):
             parse_excel_file(path)
@@ -109,11 +121,14 @@ def test_headers_are_normalized():
 
 # --- Invalid rows ---
 
+
 def test_missing_phone_marks_invalid():
-    path = _make_xlsx([
-        ["phone", "name"],
-        ["", "No Phone"],
-    ])
+    path = _make_xlsx(
+        [
+            ["phone", "name"],
+            ["", "No Phone"],
+        ]
+    )
     try:
         rows = parse_excel_file(path)
         assert rows[0].is_valid is False
@@ -123,10 +138,12 @@ def test_missing_phone_marks_invalid():
 
 
 def test_invalid_phone_chars_marks_invalid():
-    path = _make_xlsx([
-        ["phone", "name"],
-        ["(849)abc", "Bad"],
-    ])
+    path = _make_xlsx(
+        [
+            ["phone", "name"],
+            ["(849)abc", "Bad"],
+        ]
+    )
     try:
         rows = parse_excel_file(path)
         assert rows[0].is_valid is False
@@ -135,11 +152,13 @@ def test_invalid_phone_chars_marks_invalid():
 
 
 def test_duplicate_phone_marks_second_as_duplicate():
-    path = _make_xlsx([
-        ["phone", "name"],
-        ["84901234567", "Alice"],
-        ["84901234567", "Alice Copy"],
-    ])
+    path = _make_xlsx(
+        [
+            ["phone", "name"],
+            ["84901234567", "Alice"],
+            ["84901234567", "Alice Copy"],
+        ]
+    )
     try:
         rows = parse_excel_file(path)
         assert rows[0].is_valid is True
@@ -151,11 +170,14 @@ def test_duplicate_phone_marks_second_as_duplicate():
 
 # --- Structural errors ---
 
+
 def test_missing_phone_column_raises():
-    path = _make_xlsx([
-        ["name", "order_id"],
-        ["Alice", "ORD001"],
-    ])
+    path = _make_xlsx(
+        [
+            ["name", "order_id"],
+            ["Alice", "ORD001"],
+        ]
+    )
     try:
         with pytest.raises(ExcelParseError, match="phone"):
             parse_excel_file(path)

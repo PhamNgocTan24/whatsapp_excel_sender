@@ -1,5 +1,3 @@
-import pytest
-
 from campaigns.services.phone_normalizer import normalize_phone_number
 
 

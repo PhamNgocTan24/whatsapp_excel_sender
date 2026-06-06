@@ -4,7 +4,7 @@ from datetime import datetime, timezone
 
 from django.db import transaction
 
-from ..models import Campaign, CampaignStatus, MessageLog, MessageDirection, Recipient, RecipientStatus
+from ..models import Campaign, CampaignStatus, MessageDirection, MessageLog, Recipient, RecipientStatus
 from .whatsapp_client import WhatsAppAPIError, WhatsAppClient
 
 logger = logging.getLogger(__name__)
@@ -120,7 +120,15 @@ def _process_recipient(recipient: Recipient, dry_run: bool, campaign: Campaign) 
         recipient.whatsapp_message_id = message_id
         recipient.sent_at = datetime.now(tz=timezone.utc)
         recipient.error_message = ""
-        recipient.save(update_fields=["status", "whatsapp_message_id", "sent_at", "error_message", "updated_at"])
+        recipient.save(
+            update_fields=[
+                "status",
+                "whatsapp_message_id",
+                "sent_at",
+                "error_message",
+                "updated_at",
+            ]
+        )
 
         MessageLog.objects.create(
             campaign=campaign,
@@ -183,7 +191,10 @@ def send_campaign(campaign_id: int) -> CampaignSendResult:
 
     logger.info(
         "Campaign %d send complete: %d sent, %d failed, %d skipped",
-        campaign_id, sent, failed, skipped,
+        campaign_id,
+        sent,
+        failed,
+        skipped,
     )
 
     return CampaignSendResult(total=total, sent=sent, failed=failed, skipped=skipped)

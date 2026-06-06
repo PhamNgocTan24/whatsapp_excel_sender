@@ -1,22 +1,13 @@
-from unittest.mock import MagicMock, patch
+from unittest.mock import patch
 
 import pytest
 
-from campaigns.models import (
-    Campaign,
-    CampaignStatus,
-    MessageLog,
-    Recipient,
-    RecipientStatus,
-)
-from campaigns.services.campaign_sender import (
-    _build_body_params,
-    send_campaign,
-)
+from campaigns.models import Campaign, CampaignStatus, MessageLog, Recipient, RecipientStatus
+from campaigns.services.campaign_sender import _build_body_params, send_campaign
 from campaigns.services.whatsapp_client import WhatsAppAPIError
 
-
 # --- Fixtures ---
+
 
 @pytest.fixture
 def operator(django_user_model):
@@ -54,6 +45,7 @@ def pending_recipient(campaign):
 
 # --- Body params tests ---
 
+
 def test_build_body_params_with_name_and_params(pending_recipient):
     params = _build_body_params(pending_recipient)
     assert params[0] == "Alice"
@@ -74,6 +66,7 @@ def test_build_body_params_no_name(campaign):
 
 
 # --- Dry run tests ---
+
 
 @pytest.mark.django_db
 def test_dry_run_does_not_call_whatsapp_api(campaign, pending_recipient):
@@ -117,6 +110,7 @@ def test_dry_run_updates_campaign_status_to_completed(campaign, pending_recipien
 
 # --- Invalid recipients are skipped ---
 
+
 @pytest.mark.django_db
 def test_invalid_recipients_are_skipped(campaign):
     Recipient.objects.create(
@@ -133,6 +127,7 @@ def test_invalid_recipients_are_skipped(campaign):
 
 
 # --- Real API send ---
+
 
 @pytest.mark.django_db
 def test_successful_real_send_marks_recipient_sent(campaign, pending_recipient):
@@ -174,9 +169,7 @@ def test_failed_send_creates_error_log(campaign, pending_recipient):
     campaign.save()
 
     with patch("campaigns.services.campaign_sender.WhatsAppClient") as MockClient:
-        MockClient.return_value.send_template_message.side_effect = WhatsAppAPIError(
-            "Timeout", response_payload=None
-        )
+        MockClient.return_value.send_template_message.side_effect = WhatsAppAPIError("Timeout", response_payload=None)
         send_campaign(campaign.id)
 
     log = MessageLog.objects.filter(campaign=campaign).first()
@@ -188,12 +181,18 @@ def test_failed_send_creates_error_log(campaign, pending_recipient):
 @pytest.mark.django_db
 def test_campaign_status_completed_with_errors_on_partial_failure(campaign):
     Recipient.objects.create(
-        campaign=campaign, row_number=2, phone="84901234567",
-        name="Alice", status=RecipientStatus.PENDING,
+        campaign=campaign,
+        row_number=2,
+        phone="84901234567",
+        name="Alice",
+        status=RecipientStatus.PENDING,
     )
     Recipient.objects.create(
-        campaign=campaign, row_number=3, phone="84900000002",
-        name="Bob", status=RecipientStatus.PENDING,
+        campaign=campaign,
+        row_number=3,
+        phone="84900000002",
+        name="Bob",
+        status=RecipientStatus.PENDING,
     )
 
     campaign.dry_run = False

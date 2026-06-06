@@ -4,16 +4,10 @@ import pytest
 from django.test import Client
 from django.urls import reverse
 
-from campaigns.models import (
-    Campaign,
-    CampaignStatus,
-    MessageLog,
-    Recipient,
-    RecipientStatus,
-)
-
+from campaigns.models import Campaign, CampaignStatus, MessageLog, Recipient, RecipientStatus
 
 # --- Fixtures ---
+
 
 @pytest.fixture
 def client():
@@ -55,21 +49,27 @@ def sent_recipient(campaign):
 def _make_status_payload(message_id: str, status: str, errors: list = None) -> dict:
     payload = {
         "object": "whatsapp_business_account",
-        "entry": [{
-            "id": "123",
-            "changes": [{
-                "value": {
-                    "messaging_product": "whatsapp",
-                    "statuses": [{
-                        "id": message_id,
-                        "status": status,
-                        "timestamp": "1234567890",
-                        "recipient_id": "84901234567",
-                    }]
-                },
-                "field": "messages"
-            }]
-        }]
+        "entry": [
+            {
+                "id": "123",
+                "changes": [
+                    {
+                        "value": {
+                            "messaging_product": "whatsapp",
+                            "statuses": [
+                                {
+                                    "id": message_id,
+                                    "status": status,
+                                    "timestamp": "1234567890",
+                                    "recipient_id": "84901234567",
+                                }
+                            ],
+                        },
+                        "field": "messages",
+                    }
+                ],
+            }
+        ],
     }
     if errors:
         payload["entry"][0]["changes"][0]["value"]["statuses"][0]["errors"] = errors
@@ -77,6 +77,7 @@ def _make_status_payload(message_id: str, status: str, errors: list = None) -> d
 
 
 # ---- Verification tests ----
+
 
 @pytest.mark.django_db
 def test_webhook_verification_accepts_correct_token(client, settings):
@@ -87,7 +88,7 @@ def test_webhook_verification_accepts_correct_token(client, settings):
             "hub.mode": "subscribe",
             "hub.verify_token": "test-token",
             "hub.challenge": "challenge_abc",
-        }
+        },
     )
     assert response.status_code == 200
     assert response.content == b"challenge_abc"
@@ -102,7 +103,7 @@ def test_webhook_verification_rejects_wrong_token(client, settings):
             "hub.mode": "subscribe",
             "hub.verify_token": "wrong-token",
             "hub.challenge": "challenge_abc",
-        }
+        },
     )
     assert response.status_code == 403
 
@@ -116,12 +117,13 @@ def test_webhook_verification_rejects_wrong_mode(client, settings):
             "hub.mode": "unsubscribe",
             "hub.verify_token": "test-token",
             "hub.challenge": "challenge_abc",
-        }
+        },
     )
     assert response.status_code == 403
 
 
 # ---- Status update tests ----
+
 
 @pytest.mark.django_db
 def test_webhook_delivered_updates_recipient_status(client, sent_recipient):
@@ -151,10 +153,7 @@ def test_webhook_read_updates_recipient_status(client, sent_recipient):
 
 @pytest.mark.django_db
 def test_webhook_failed_updates_recipient_status(client, sent_recipient):
-    payload = _make_status_payload(
-        "wamid.test123", "failed",
-        errors=[{"message": "Number not registered"}]
-    )
+    payload = _make_status_payload("wamid.test123", "failed", errors=[{"message": "Number not registered"}])
     response = client.post(
         reverse("webhooks:whatsapp"),
         data=json.dumps(payload),

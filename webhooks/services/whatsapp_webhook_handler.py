@@ -32,11 +32,13 @@ def _extract_status_updates(payload: dict) -> list[dict]:
                     status = status_obj.get("status")
                     errors = status_obj.get("errors", [])
                     if message_id and status:
-                        updates.append({
-                            "message_id": message_id,
-                            "status": status,
-                            "errors": errors,
-                        })
+                        updates.append(
+                            {
+                                "message_id": message_id,
+                                "status": status,
+                                "errors": errors,
+                            }
+                        )
     except Exception as exc:
         logger.warning("Error extracting status updates from webhook payload: %s", exc)
 
@@ -70,14 +72,16 @@ def handle_whatsapp_status_webhook(payload: dict) -> int:
         app_status = WHATSAPP_STATUS_MAP.get(wa_status)
 
         if app_status is None:
-            logger.debug("Unknown WhatsApp status '%s' for message %s — skipping.", wa_status, message_id)
+            logger.debug(
+                "Unknown WhatsApp status '%s' for message %s — skipping.",
+                wa_status,
+                message_id,
+            )
             continue
 
         # Find recipient by WhatsApp message ID
         try:
-            recipient = Recipient.objects.select_related("campaign").get(
-                whatsapp_message_id=message_id
-            )
+            recipient = Recipient.objects.select_related("campaign").get(whatsapp_message_id=message_id)
         except Recipient.DoesNotExist:
             logger.debug("No recipient found for whatsapp_message_id=%s — ignoring.", message_id)
             # Still log the event for debugging
@@ -98,9 +102,7 @@ def handle_whatsapp_status_webhook(payload: dict) -> int:
         # Build error message from WhatsApp errors array if present
         error_message = ""
         if errors:
-            error_message = "; ".join(
-                e.get("message", str(e)) for e in errors if isinstance(e, dict)
-            )
+            error_message = "; ".join(e.get("message", str(e)) for e in errors if isinstance(e, dict))
 
         with transaction.atomic():
             recipient.status = app_status
@@ -123,7 +125,9 @@ def handle_whatsapp_status_webhook(payload: dict) -> int:
         updated_count += 1
         logger.info(
             "Webhook: recipient %s updated to '%s' (message_id=%s)",
-            recipient.phone, app_status, message_id,
+            recipient.phone,
+            app_status,
+            message_id,
         )
 
     return updated_count

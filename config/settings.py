@@ -2,10 +2,10 @@
 Django settings for WhatsApp Excel Sender.
 """
 
+import os
 from pathlib import Path
 
 import dotenv
-import os
 
 # Load .env file
 dotenv.load_dotenv()

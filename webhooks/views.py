@@ -36,7 +36,8 @@ def _verify_webhook(request):
 
     logger.warning(
         "WhatsApp webhook verification failed. mode=%s token_match=%s",
-        mode, verify_token == expected_token,
+        mode,
+        verify_token == expected_token,
     )
     return HttpResponseForbidden("Verification failed.")
 

@@ -1,11 +1,11 @@
 import os
 import tempfile
-from unittest.mock import patch, PropertyMock
+from unittest.mock import PropertyMock, patch
 
 import openpyxl
 import pytest
 
-from campaigns.models import Campaign, CampaignStatus, Recipient, RecipientStatus
+from campaigns.models import Campaign, CampaignStatus, Recipient
 from campaigns.services.campaign_importer import import_campaign_recipients
 
 
@@ -40,7 +40,7 @@ def make_campaign(operator, tmp_path):
             name="Import Test",
             template_name="hello_world",
             language_code="en_US",
-            excel_file="dummy.xlsx",   # placeholder — path is patched below
+            excel_file="dummy.xlsx",  # placeholder — path is patched below
             dry_run=True,
             created_by=operator,
             status=CampaignStatus.DRAFT,
@@ -59,21 +59,22 @@ def make_campaign(operator, tmp_path):
 
 def _run_import(campaign, path):
     """Run import with excel_file.path patched to the real temp file."""
-    with patch.object(
-        type(campaign.excel_file), "path", new_callable=PropertyMock, return_value=path
-    ):
+    with patch.object(type(campaign.excel_file), "path", new_callable=PropertyMock, return_value=path):
         return import_campaign_recipients(campaign)
 
 
 # --- Tests ---
 
+
 @pytest.mark.django_db
 def test_import_creates_recipients(make_campaign):
-    campaign, path = make_campaign([
-        ["phone", "name", "order_id"],
-        ["84901234567", "Alice", "ORD001"],
-        ["84987654321", "Bob", "ORD002"],
-    ])
+    campaign, path = make_campaign(
+        [
+            ["phone", "name", "order_id"],
+            ["84901234567", "Alice", "ORD001"],
+            ["84987654321", "Bob", "ORD002"],
+        ]
+    )
     result = _run_import(campaign, path)
     assert result.total == 2
     assert result.valid == 2
@@ -83,10 +84,12 @@ def test_import_creates_recipients(make_campaign):
 
 @pytest.mark.django_db
 def test_import_marks_campaign_ready(make_campaign):
-    campaign, path = make_campaign([
-        ["phone", "name"],
-        ["84901234567", "Alice"],
-    ])
+    campaign, path = make_campaign(
+        [
+            ["phone", "name"],
+            ["84901234567", "Alice"],
+        ]
+    )
     _run_import(campaign, path)
     campaign.refresh_from_db()
     assert campaign.status == CampaignStatus.READY
@@ -94,12 +97,14 @@ def test_import_marks_campaign_ready(make_campaign):
 
 @pytest.mark.django_db
 def test_import_marks_invalid_rows(make_campaign):
-    campaign, path = make_campaign([
-        ["phone", "name"],
-        ["84901234567", "Alice"],
-        ["", "No Phone"],
-        ["(bad)phone", "Bad"],
-    ])
+    campaign, path = make_campaign(
+        [
+            ["phone", "name"],
+            ["84901234567", "Alice"],
+            ["", "No Phone"],
+            ["(bad)phone", "Bad"],
+        ]
+    )
     result = _run_import(campaign, path)
     assert result.valid == 1
     assert result.invalid == 2
@@ -107,11 +112,13 @@ def test_import_marks_invalid_rows(make_campaign):
 
 @pytest.mark.django_db
 def test_import_marks_duplicate_rows(make_campaign):
-    campaign, path = make_campaign([
-        ["phone", "name"],
-        ["84901234567", "Alice"],
-        ["84901234567", "Alice Again"],
-    ])
+    campaign, path = make_campaign(
+        [
+            ["phone", "name"],
+            ["84901234567", "Alice"],
+            ["84901234567", "Alice Again"],
+        ]
+    )
     result = _run_import(campaign, path)
     assert result.valid == 1
     assert result.duplicate == 1
@@ -119,10 +126,12 @@ def test_import_marks_duplicate_rows(make_campaign):
 
 @pytest.mark.django_db
 def test_import_stores_params(make_campaign):
-    campaign, path = make_campaign([
-        ["phone", "name", "order_id", "date"],
-        ["84901234567", "Alice", "ORD001", "2026-06-10"],
-    ])
+    campaign, path = make_campaign(
+        [
+            ["phone", "name", "order_id", "date"],
+            ["84901234567", "Alice", "ORD001", "2026-06-10"],
+        ]
+    )
     _run_import(campaign, path)
     recipient = Recipient.objects.get(campaign=campaign)
     assert recipient.params == {"order_id": "ORD001", "date": "2026-06-10"}
@@ -130,19 +139,23 @@ def test_import_stores_params(make_campaign):
 
 @pytest.mark.django_db
 def test_import_clears_previous_recipients(make_campaign):
-    campaign, path1 = make_campaign([
-        ["phone", "name"],
-        ["84901234567", "Alice"],
-    ])
+    campaign, path1 = make_campaign(
+        [
+            ["phone", "name"],
+            ["84901234567", "Alice"],
+        ]
+    )
     _run_import(campaign, path1)
     assert Recipient.objects.filter(campaign=campaign).count() == 1
 
     # Re-import with different data
-    path2 = _make_xlsx([
-        ["phone", "name"],
-        ["84900000001", "NewAlice"],
-        ["84900000002", "NewBob"],
-    ])
+    path2 = _make_xlsx(
+        [
+            ["phone", "name"],
+            ["84900000001", "NewAlice"],
+            ["84900000002", "NewBob"],
+        ]
+    )
     try:
         _run_import(campaign, path2)
     finally:
@@ -154,10 +167,12 @@ def test_import_clears_previous_recipients(make_campaign):
 
 @pytest.mark.django_db
 def test_import_fails_gracefully_on_missing_phone_column(make_campaign):
-    campaign, path = make_campaign([
-        ["name", "order_id"],
-        ["Alice", "ORD001"],
-    ])
+    campaign, path = make_campaign(
+        [
+            ["name", "order_id"],
+            ["Alice", "ORD001"],
+        ]
+    )
     result = _run_import(campaign, path)
     assert result.error_message != ""
     campaign.refresh_from_db()

@@ -19,3 +19,17 @@ dev = [
     "pytest-django>=4.8.0",
     "ruff>=0.6.0",
 ]
+
+[tool.black]
+target-version = ["py312"]
+line-length = 119
+
+[tool.isort]
+profile = "black"
+line_length = 119
+
+[tool.ruff]
+line-length = 119
+
+[tool.ruff.lint]
+select = ["E", "F", "W", "I"]

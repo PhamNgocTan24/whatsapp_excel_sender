@@ -3,7 +3,7 @@ from dataclasses import dataclass
 from django.db import transaction
 
 from ..models import Campaign, CampaignStatus, Recipient, RecipientStatus
-from .excel_parser import ExcelParseError, ParsedRecipientRow, parse_excel_file
+from .excel_parser import ExcelParseError, parse_excel_file
 
 
 @dataclass
@@ -35,8 +35,11 @@ def import_campaign_recipients(campaign: Campaign) -> ImportResult:
         campaign.status = CampaignStatus.FAILED
         campaign.save(update_fields=["status", "updated_at"])
         return ImportResult(
-            total=0, valid=0, invalid=0, duplicate=0,
-            error_message="No data rows found in the Excel file."
+            total=0,
+            valid=0,
+            invalid=0,
+            duplicate=0,
+            error_message="No data rows found in the Excel file.",
         )
 
     recipients_to_create: list[Recipient] = []
@@ -58,15 +61,17 @@ def import_campaign_recipients(campaign: Campaign) -> ImportResult:
             status = RecipientStatus.PENDING
             valid_count += 1
 
-        recipients_to_create.append(Recipient(
-            campaign=campaign,
-            row_number=row.row_number,
-            phone=row.phone,
-            name=row.name,
-            params=row.params,
-            status=status,
-            error_message="; ".join(row.errors) if row.errors else "",
-        ))
+        recipients_to_create.append(
+            Recipient(
+                campaign=campaign,
+                row_number=row.row_number,
+                phone=row.phone,
+                name=row.name,
+                params=row.params,
+                status=status,
+                error_message="; ".join(row.errors) if row.errors else "",
+            )
+        )
 
     with transaction.atomic():
         # Clear previous import if any

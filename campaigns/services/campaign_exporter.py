@@ -4,7 +4,6 @@ import json
 
 from ..models import Campaign, Recipient
 
-
 # Required columns per spec
 EXPORT_COLUMNS = [
     "row_number",
@@ -32,16 +31,18 @@ def export_campaign_csv(campaign: Campaign) -> str:
     recipients = Recipient.objects.filter(campaign=campaign).order_by("row_number")
 
     for recipient in recipients:
-        writer.writerow({
-            "row_number": recipient.row_number,
-            "phone": recipient.phone,
-            "name": recipient.name,
-            "status": recipient.status,
-            "whatsapp_message_id": recipient.whatsapp_message_id or "",
-            "error_message": recipient.error_message,
-            "params": json.dumps(recipient.params, ensure_ascii=False) if recipient.params else "",
-            "created_at": recipient.created_at.strftime("%Y-%m-%d %H:%M:%S"),
-            "updated_at": recipient.updated_at.strftime("%Y-%m-%d %H:%M:%S"),
-        })
+        writer.writerow(
+            {
+                "row_number": recipient.row_number,
+                "phone": recipient.phone,
+                "name": recipient.name,
+                "status": recipient.status,
+                "whatsapp_message_id": recipient.whatsapp_message_id or "",
+                "error_message": recipient.error_message,
+                "params": (json.dumps(recipient.params, ensure_ascii=False) if recipient.params else ""),
+                "created_at": recipient.created_at.strftime("%Y-%m-%d %H:%M:%S"),
+                "updated_at": recipient.updated_at.strftime("%Y-%m-%d %H:%M:%S"),
+            }
+        )
 
     return output.getvalue()
